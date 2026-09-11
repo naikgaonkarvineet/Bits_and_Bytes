@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Details - KaamSetu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-icon">🔨</span>
+        KaamSetu
+      </a>
+
+      <button class="hamburger" id="hamburgerBtn" aria-label="Toggle navigation">☰</button>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="worker-dashboard.html" class="nav-link">Find Jobs</a></li>
+        <li><a href="contractor-dashboard.html" class="nav-link">Contractor Portal</a></li>
+        <li class="mobile-nav-actions">
+          <a href="worker-dashboard.html" class="btn btn-outline btn-sm">&larr; Back to Jobs</a>
+        </li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="worker-dashboard.html" class="btn btn-outline btn-sm">&larr; Back to Job Feed</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      
+      <div id="jobDetailContainer">
+        <!-- Injected via JavaScript -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <div class="footer-bottom">
+        <p>KaamSetu &bull; Built for Hackathon MVP Demonstration &bull; Frontend UI by Member 1</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    function loadJobDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const jobId = urlParams.get('id') || 'job-101';
+      const job = getJobById(jobId);
+
+      const container = document.getElementById('jobDetailContainer');
+      if (!job) {
+        container.innerHTML = `
+          <div class="card" style="text-align: center; padding: 3rem;">
+            <h2>Job Not Found</h2>
+            <p style="color: var(--slate-600);">The requested job post could not be found.</p>
+            <a href="worker-dashboard.html" class="btn btn-primary">Return to Job Listings</a>
+          </div>
+        `;
+        return;
+      }
+
+      const totalEstimated = job.dailyWage * (parseInt(job.duration) || 3);
+
+      container.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+          <a href="worker-dashboard.html" style="font-size: 0.9rem; color: var(--slate-600); font-weight: 500;">
+            &larr; Back to All Available Jobs
+          </a>
+        </div>
+
+        <div class="grid grid-cols-3" style="gap: 2rem;">
+          
+          <!-- Left 2 Cols: Detailed Scope -->
+          <div style="grid-column: span 2;">
+            <div class="card" style="margin-bottom: 1.5rem;">
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                <span class="badge badge-primary">${job.category}</span>
+                ${job.urgent ? '<span class="badge badge-danger">⚡ Urgent Site Requirement</span>' : ''}
+                <span class="badge badge-success">✓ Verified Contractor</span>
+                <span class="badge badge-gray">Posted ${job.postedAt || 'recently'}</span>
+              </div>
+
+              <h1 style="font-size: 1.85rem; margin-bottom: 0.75rem;">${job.title}</h1>
+              
+              <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--slate-600); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                <span>🏗️ <strong>${job.contractorName}</strong></span> &bull; 
+                <span>📍 ${job.location}</span>
+              </div>
+
+              <div style="border-top: 1px solid var(--slate-200); border-bottom: 1px solid var(--slate-200); padding: 1.25rem 0; margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem;">Work Overview & Scope</h3>
+                <p style="color: var(--slate-700); line-height: 1.7;">
+                  ${job.description}
+                </p>
+              </div>
+
+              <div style="margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem;">Key Requirements & Site Guidelines</h3>
+                <ul style="padding-left: 1.25rem; color: var(--slate-700); line-height: 1.8;">
+                  ${(job.requirements || [
+                    "Prior hands-on experience in " + job.category,
+                    "Bring basic hand tools appropriate for the trade",
+                    "Punctuality and adherence to construction site safety norms",
+                    "Aadhaar card or voter ID for security gate entry"
+                  ]).map(r => `<li>${r}</li>`).join('')}
+                </ul>
+              </div>
+
+              <div>
+                <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem;">Site Location Map</h3>
+                <div style="background: var(--slate-100); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 2rem; text-align: center;">
+                  <div style="font-size: 2rem; margin-bottom: 0.5rem;">📍</div>
+                  <strong style="color: var(--slate-800);">${job.location}</strong>
+                  <p style="font-size: 0.85rem; color: var(--slate-600); margin: 0.25rem 0 0;">
+                    Complete landmark and GPS navigation provided upon contractor confirmation.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right 1 Col: Wage Card & Apply CTA -->
+          <div>
+            <div style="position: sticky; top: 90px;">
+              
+              <!-- Wage & Action Card -->
+              <div class="card" style="margin-bottom: 1.5rem; border-top: 4px solid var(--primary);">
+                <div style="margin-bottom: 1.25rem; text-align: center;">
+                  <span style="font-size: 0.85rem; color: var(--slate-600); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Guaranteed Daily Wage</span>
+                  <div class="wage-tag" style="font-size: 2.25rem; justify-content: center; margin: 0.25rem 0;">
+                    ₹${job.dailyWage}
+                  </div>
+                  <span style="font-size: 0.85rem; color: var(--success); font-weight: 600;">
+                    ✓ Direct Cash / UPI Payment by Evening
+                  </span>
+                </div>
+
+                <div style="background: var(--slate-50); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--slate-700);">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Work Duration:</span>
+                    <strong>${job.duration}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Reporting Time:</span>
+                    <strong>${job.startDate}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Openings:</span>
+                    <strong>${job.workersNeeded} Workers</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--slate-200); padding-top: 0.5rem; color: var(--slate-900);">
+                    <span>Est. Total Earnings:</span>
+                    <strong style="color: var(--primary);">~ ₹${totalEstimated.toLocaleString('en-IN')}</strong>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary btn-block btn-lg" onclick="triggerApply('${job.id}')" id="applyButton">
+                  ⚡ Instant Apply for this Job
+                </button>
+                <span class="form-helper" style="text-align: center; display: block; margin-top: 0.5rem;">
+                  No fees. Contractor will review your profile directly.
+                </span>
+              </div>
+
+              <!-- Contractor Info Box -->
+              <div class="card">
+                <h4 style="margin-bottom: 0.75rem;">Contractor Credentials</h4>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--accent-light); color: var(--accent-hover); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                    🏗️
+                  </div>
+                  <div>
+                    <h4 style="margin: 0; font-size: 1rem;">${job.contractorName}</h4>
+                    <span style="font-size: 0.8rem; color: var(--success); font-weight: 600;">✓ Verified GST & Site Registered</span>
+                  </div>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--slate-600); margin-bottom: 0.75rem;">
+                  Average contractor rating: ⭐ <strong>4.9 / 5.0</strong> &bull; 24 past projects completed on KaamSetu.
+                </p>
+                <a href="contractor-profile.html" class="btn btn-outline btn-sm btn-block">
+                  View Contractor Profile
+                </a>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      `;
+    }
+
+    function triggerApply(jobId) {
+      const user = getCurrentUser();
+      const res = applyForJob(jobId, { name: user.name, trade: user.trade, phone: user.phone });
+      
+      const btn = document.getElementById('applyButton');
+      if (res.success) {
+        btn.textContent = '✓ Applied Successfully!';
+        btn.className = 'btn btn-success btn-block btn-lg';
+        btn.disabled = true;
+        showToast(res.message, 'success');
+      } else {
+        showToast(res.message, 'info');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadJobDetails();
+    });
+  </script>
+</body>
+</html>

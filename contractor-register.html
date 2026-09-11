@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contractor Registration - KaamSetu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-icon">🔨</span>
+        KaamSetu
+      </a>
+
+      <button class="hamburger" id="hamburgerBtn" aria-label="Toggle navigation">☰</button>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="contractor-dashboard.html" class="nav-link">Contractor Portal</a></li>
+        <li><a href="login.html" class="nav-link">Sign In</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="worker-register.html" class="btn btn-outline-primary btn-sm">Join as Worker</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <div class="auth-wrapper" style="max-width: 580px;">
+        <div class="auth-card">
+          
+          <div style="text-align: center; margin-bottom: 2rem;">
+            <span class="badge badge-accent" style="margin-bottom: 0.5rem;">🏗️ Contractor Portal</span>
+            <h2>Register as a Contractor / Builder</h2>
+            <p style="color: var(--slate-600); font-size: 0.95rem;">
+              Post construction jobs, recruit skilled tradespeople, and staff your sites seamlessly.
+            </p>
+          </div>
+
+          <form id="contractorRegisterForm" onsubmit="handleContractorRegister(event)">
+            
+            <!-- Company / Firm Name -->
+            <div class="form-group">
+              <label class="form-label" for="companyName">Company / Firm / Contractor Name *</label>
+              <input type="text" id="companyName" class="form-control" placeholder="e.g. Apex Infrastructure Pvt. Ltd." required>
+            </div>
+
+            <!-- Primary Contact Person -->
+            <div class="form-group">
+              <label class="form-label" for="contactPerson">Primary Contact Person Name *</label>
+              <input type="text" id="contactPerson" class="form-control" placeholder="e.g. Vikram Sharma" required>
+            </div>
+
+            <!-- Contact Details Row -->
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="contractorPhone">Mobile Number *</label>
+                <input type="tel" id="contractorPhone" class="form-control" placeholder="e.g. 9876543210" pattern="[0-9]{10}" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="contractorEmail">Work Email Address *</label>
+                <input type="email" id="contractorEmail" class="form-control" placeholder="e.g. contact@apexinfra.com" required>
+              </div>
+            </div>
+
+            <!-- Business Type -->
+            <div class="form-group">
+              <label class="form-label" for="businessType">Business / Contractor Type *</label>
+              <select id="businessType" class="form-control" required>
+                <option value="General Civil Contractor" selected>General Civil Contractor</option>
+                <option value="Residential Builder">Residential Builder / Developer</option>
+                <option value="Interior Finishing & Decorator">Interior Finishing & Decorator</option>
+                <option value="Subcontractor (Masonry/Carpentry/Plumbing)">Subcontractor (Specialized Trade)</option>
+                <option value="Individual Homeowner / Renovator">Individual Homeowner / Renovator</option>
+              </select>
+            </div>
+
+            <!-- Primary Operating City & Address -->
+            <div class="form-group">
+              <label class="form-label" for="cityLocation">Primary Operating City & State *</label>
+              <input type="text" id="cityLocation" class="form-control" placeholder="e.g. Delhi NCR / Noida / Gurugram" required>
+            </div>
+
+            <!-- GST / Government ID (Optional) -->
+            <div class="form-group">
+              <label class="form-label" for="gstId">GSTIN or Business Registration Number (Optional)</label>
+              <input type="text" id="gstId" class="form-control" placeholder="e.g. 07AAAAA0000A1Z5">
+              <span class="form-helper">Provides verified badge to attract top-rated workers faster.</span>
+            </div>
+
+            <!-- Terms agreement -->
+            <div style="margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--slate-600);">
+              <label style="display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" checked required style="margin-top: 3px; accent-color: var(--primary);">
+                <span>I agree to provide safe site conditions and transparent, direct wage disbursement as per KaamSetu fair-work terms.</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-accent btn-block btn-lg">
+              ✓ Complete Registration & Post Jobs
+            </button>
+          </form>
+
+          <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--slate-600);">
+            Already have a contractor account? <a href="login.html" style="font-weight: 600;">Sign In here</a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <div class="footer-bottom">
+        <p>KaamSetu &bull; Built for Hackathon MVP Demonstration &bull; Frontend UI by Member 1</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    function handleContractorRegister(e) {
+      e.preventDefault();
+      const company = document.getElementById('companyName').value;
+      const person = document.getElementById('contactPerson').value;
+      const phone = document.getElementById('contractorPhone').value;
+      const email = document.getElementById('contractorEmail').value;
+      const businessType = document.getElementById('businessType').value;
+
+      setCurrentUser('contractor', person, { company, phone, email, businessType });
+      showToast(`Welcome ${company}! Your contractor account is ready.`, 'success');
+      setTimeout(() => {
+        window.location.href = 'contractor-dashboard.html';
+      }, 700);
+    }
+  </script>
+</body>
+</html>

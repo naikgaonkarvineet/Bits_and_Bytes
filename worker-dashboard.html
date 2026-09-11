@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worker Dashboard - KaamSetu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-icon">🔨</span>
+        KaamSetu
+      </a>
+
+      <button class="hamburger" id="hamburgerBtn" aria-label="Toggle navigation">☰</button>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="worker-dashboard.html" class="nav-link active">Find Jobs</a></li>
+        <li><a href="worker-profile.html" class="nav-link">My Profile</a></li>
+        <li class="mobile-nav-actions">
+          <a href="contractor-dashboard.html" class="btn btn-outline btn-sm">Switch to Contractor View</a>
+          <a href="login.html" class="btn btn-outline-primary btn-sm">Sign Out</a>
+        </li>
+      </ul>
+
+      <div class="nav-actions">
+        <span class="badge badge-success" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          🟢 Available for Work Today
+        </span>
+        <a href="worker-profile.html" class="btn btn-outline btn-sm">👤 Ramesh Kumar</a>
+        <a href="login.html" class="btn btn-outline btn-sm">Logout</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      
+      <!-- Worker Header & Summary -->
+      <div style="background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700;">
+            👷
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <h2 style="margin: 0;" id="workerGreeting">Namaste, Ramesh Kumar</h2>
+              <span class="badge badge-primary">Rajmistri (Mason)</span>
+              <span class="badge badge-success">✓ Aadhaar Verified</span>
+            </div>
+            <p style="color: var(--slate-600); margin: 0.25rem 0 0; font-size: 0.9rem;">
+              Location: <strong>Noida & Greater Noida, UP</strong> &bull; Base Rate: <strong>₹850/day</strong>
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <a href="worker-profile.html" class="btn btn-outline-primary btn-sm">View Full Profile</a>
+          <button class="btn btn-success btn-sm" onclick="toggleAvailability(this)">Status: Ready for Work</button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Overview -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📋</div>
+          <div>
+            <div class="stat-value" id="statApplications">2</div>
+            <div class="stat-label">Active Applications</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div>
+            <div class="stat-value">1</div>
+            <div class="stat-label">Confirmed / Hired Work</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon amber">₹</div>
+          <div>
+            <div class="stat-value">₹12,400</div>
+            <div class="stat-label">Earnings This Month</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon blue">⭐</div>
+          <div>
+            <div class="stat-value">4.8 / 5.0</div>
+            <div class="stat-label">Contractor Satisfaction</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs (Available Jobs vs My Applications) -->
+      <div class="tab-group">
+        <button class="tab-btn active" id="tabAvailableJobs" onclick="showDashboardTab('jobs')">
+          🔍 Available Daily Jobs (<span id="jobsCountBadge">0</span>)
+        </button>
+        <button class="tab-btn" id="tabMyApplications" onclick="showDashboardTab('applications')">
+          📑 My Applications (<span id="appsCountBadge">0</span>)
+        </button>
+      </div>
+
+      <!-- Tab 1: Available Jobs View -->
+      <div id="viewAvailableJobs">
+        
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label class="form-label" style="margin-bottom: 0.2rem; font-size: 0.8rem;">Skill / Trade</label>
+            <select id="filterTrade" class="form-control" onchange="applyFilters()">
+              <option value="All">All Trades</option>
+              <option value="Masonry">Masonry (राजमिस्त्री)</option>
+              <option value="Carpentry">Carpentry (बढ़ई)</option>
+              <option value="Painting">Painting (पेंटर)</option>
+              <option value="Plumbing">Plumbing (प्लंबर)</option>
+              <option value="Electrical">Electrical (बिजली मिस्त्री)</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label class="form-label" style="margin-bottom: 0.2rem; font-size: 0.8rem;">Minimum Daily Wage</label>
+            <select id="filterWage" class="form-control" onchange="applyFilters()">
+              <option value="0">Any Wage Rate</option>
+              <option value="700">₹700+ / day</option>
+              <option value="800">₹800+ / day</option>
+              <option value="900">₹900+ / day</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label class="form-label" style="margin-bottom: 0.2rem; font-size: 0.8rem;">Location Keyword</label>
+            <input type="text" id="filterLocation" class="form-control" placeholder="Search city or area..." oninput="applyFilters()">
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <button class="btn btn-outline btn-sm" onclick="resetFilters()">Clear Filters</button>
+          </div>
+        </div>
+
+        <!-- Job Cards Grid -->
+        <div class="grid grid-cols-2" id="jobsGridContainer">
+          <!-- Dynamic Job Cards injected here -->
+        </div>
+
+      </div>
+
+      <!-- Tab 2: My Applications View -->
+      <div id="viewMyApplications" style="display: none;">
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="padding: 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+            <h3 style="margin: 0;">Jobs You Have Applied For</h3>
+            <p style="color: var(--slate-600); margin: 0.25rem 0 0; font-size: 0.85rem;">
+              Track the status of your applications. Once accepted, contact the contractor directly for reporting details.
+            </p>
+          </div>
+          <div id="applicationsListContainer" style="padding: 1.25rem;">
+            <!-- Applications injected here -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <div class="footer-bottom">
+        <p>KaamSetu &bull; Built for Hackathon MVP Demonstration &bull; Frontend UI by Member 1</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    let activeJobsList = [];
+
+    function loadDashboardData() {
+      const user = getCurrentUser();
+      if (user && user.name) {
+        document.getElementById('workerGreeting').textContent = `Namaste, ${user.name}`;
+      }
+
+      activeJobsList = getJobs();
+      renderJobs(activeJobsList);
+      renderApplications();
+    }
+
+    function renderJobs(jobs) {
+      const container = document.getElementById('jobsGridContainer');
+      const badge = document.getElementById('jobsCountBadge');
+      badge.textContent = jobs.length;
+
+      if (jobs.length === 0) {
+        container.innerHTML = `
+          <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+            <p style="font-size: 1.2rem; color: var(--slate-600);">No jobs match your selected filter criteria.</p>
+            <button class="btn btn-primary btn-sm" onclick="resetFilters()">Show All Available Jobs</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = jobs.map(job => `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="badge badge-primary" style="margin-bottom: 0.35rem;">${job.category}</span>
+              ${job.urgent ? '<span class="badge badge-danger">⚡ Urgent Hiring</span>' : ''}
+              <h3 style="font-size: 1.15rem; margin-top: 0.25rem;">${job.title}</h3>
+              <p style="color: var(--slate-600); font-size: 0.85rem; margin-bottom: 0;">
+                🏗️ <strong>${job.contractorName}</strong> &bull; 📍 ${job.location}
+              </p>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div class="wage-tag">₹${job.dailyWage}</div>
+              <span style="font-size: 0.75rem; color: var(--slate-600); display: block;">per day</span>
+            </div>
+          </div>
+
+          <p style="color: var(--slate-700); font-size: 0.9rem; margin-bottom: 1rem;">
+            ${job.description}
+          </p>
+
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; font-size: 0.85rem; color: var(--slate-600);">
+            <span>📅 Start: <strong>${job.startDate}</strong></span>
+            <span>⏱️ Duration: <strong>${job.duration}</strong></span>
+            <span>👥 Needed: <strong>${job.workersNeeded} Workers</strong></span>
+          </div>
+
+          <div class="card-footer">
+            <a href="job-details.html?id=${job.id}" class="btn btn-outline btn-sm">
+              View Site Details
+            </a>
+            <button class="btn btn-primary btn-sm" onclick="handleQuickApply('${job.id}')">
+              ⚡ Instant Apply
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderApplications() {
+      const apps = getApplications();
+      const container = document.getElementById('applicationsListContainer');
+      const badge = document.getElementById('appsCountBadge');
+      const statBadge = document.getElementById('statApplications');
+
+      badge.textContent = apps.length;
+      if (statBadge) statBadge.textContent = apps.length;
+
+      if (apps.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 2rem;">
+            <p style="color: var(--slate-600);">You haven't applied for any jobs yet.</p>
+            <button class="btn btn-primary btn-sm" onclick="showDashboardTab('jobs')">Browse Available Jobs</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = apps.map(app => {
+        let statusBadge = `<span class="badge badge-accent">⏳ ${app.status}</span>`;
+        if (app.status === 'Accepted') {
+          statusBadge = `<span class="badge badge-success">✓ Accepted / Hired</span>`;
+        } else if (app.status === 'Completed') {
+          statusBadge = `<span class="badge badge-gray">Finished</span>`;
+        }
+
+        return `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--slate-200); flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <h4 style="margin: 0; font-size: 1.05rem;">${app.jobTitle}</h4>
+                ${statusBadge}
+              </div>
+              <p style="color: var(--slate-600); font-size: 0.85rem; margin: 0;">
+                Contractor: <strong>${app.contractorName}</strong> &bull; Location: ${app.location} &bull; Applied: ${app.appliedDate}
+              </p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1.25rem;">
+              <div style="text-align: right;">
+                <div class="wage-tag">₹${app.wage}</div>
+                <span style="font-size: 0.75rem; color: var(--slate-600);">daily wage</span>
+              </div>
+              <div>
+                <a href="job-details.html?id=${app.jobId}" class="btn btn-outline btn-sm">View Job</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleQuickApply(jobId) {
+      const user = getCurrentUser();
+      const res = applyForJob(jobId, { name: user.name, trade: user.trade, phone: user.phone });
+      if (res.success) {
+        showToast(res.message, 'success');
+        renderApplications();
+      } else {
+        showToast(res.message, 'info');
+      }
+    }
+
+    function applyFilters() {
+      const trade = document.getElementById('filterTrade').value;
+      const minWage = parseInt(document.getElementById('filterWage').value) || 0;
+      const query = document.getElementById('filterLocation').value.toLowerCase().trim();
+
+      const filtered = activeJobsList.filter(job => {
+        const matchesTrade = (trade === 'All' || job.category.toLowerCase() === trade.toLowerCase());
+        const matchesWage = job.dailyWage >= minWage;
+        const matchesQuery = !query || 
+          job.title.toLowerCase().includes(query) || 
+          job.location.toLowerCase().includes(query) ||
+          job.contractorName.toLowerCase().includes(query);
+        return matchesTrade && matchesWage && matchesQuery;
+      });
+
+      renderJobs(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('filterTrade').value = 'All';
+      document.getElementById('filterWage').value = '0';
+      document.getElementById('filterLocation').value = '';
+      renderJobs(activeJobsList);
+    }
+
+    function showDashboardTab(tab) {
+      const tabJobs = document.getElementById('tabAvailableJobs');
+      const tabApps = document.getElementById('tabMyApplications');
+      const viewJobs = document.getElementById('viewAvailableJobs');
+      const viewApps = document.getElementById('viewMyApplications');
+
+      if (tab === 'jobs') {
+        tabJobs.classList.add('active');
+        tabApps.classList.remove('active');
+        viewJobs.style.display = 'block';
+        viewApps.style.display = 'none';
+      } else {
+        tabApps.classList.add('active');
+        tabJobs.classList.remove('active');
+        viewJobs.style.display = 'none';
+        viewApps.style.display = 'block';
+        renderApplications();
+      }
+    }
+
+    function toggleAvailability(btn) {
+      if (btn.classList.contains('btn-success')) {
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline');
+        btn.textContent = 'Status: Busy / Off Duty';
+        showToast('Status updated to Busy.', 'info');
+      } else {
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-success');
+        btn.textContent = 'Status: Ready for Work';
+        showToast('You are marked Available for work today!', 'success');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboardData();
+    });
+  </script>
+</body>
+</html>
