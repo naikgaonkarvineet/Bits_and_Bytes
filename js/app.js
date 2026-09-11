@@ -118,13 +118,50 @@ const SEED_APPLICATIONS = [
   }
 ];
 
-// Initialize Storage
+// Initialize Storage & Sync with Backend API
+const API_BASE_URL = (typeof window !== 'undefined' && (window.location.port === '5000' || window.location.origin.includes(':5000')))
+  ? '/api'
+  : 'http://localhost:5000/api';
+
 function initStorage() {
   if (!localStorage.getItem("kaamsetu_jobs")) {
     localStorage.setItem("kaamsetu_jobs", JSON.stringify(SEED_JOBS));
   }
   if (!localStorage.getItem("kaamsetu_applications")) {
     localStorage.setItem("kaamsetu_applications", JSON.stringify(SEED_APPLICATIONS));
+  }
+
+  // Attempt background sync with live backend API
+  syncBackendJobs();
+}
+
+async function syncBackendJobs() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/jobs`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.jobs && data.jobs.length > 0) {
+        const mapped = data.jobs.map(j => ({
+          id: j.id,
+          title: j.title,
+          category: j.category,
+          workersNeeded: j.workers_needed,
+          dailyWage: Number(j.daily_wage),
+          duration: j.duration,
+          startDate: j.start_date,
+          location: j.location,
+          contractorName: j.contractor_name,
+          contractorContact: j.contractor_contact,
+          description: j.description,
+          requirements: j.requirements || [],
+          urgent: j.urgent,
+          postedAt: "Recently"
+        }));
+        localStorage.setItem("kaamsetu_jobs", JSON.stringify(mapped));
+      }
+    }
+  } catch (e) {
+    // Backend offline or standalone mode, fallback smoothly
   }
 }
 
@@ -147,6 +184,27 @@ function saveJob(newJob) {
   const jobs = getJobs();
   jobs.unshift(newJob);
   localStorage.setItem("kaamsetu_jobs", JSON.stringify(jobs));
+
+  // Sync to Backend API if running
+  const token = localStorage.getItem("kaamsetu_token");
+  fetch(`${API_BASE_URL}/jobs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({
+      title: newJob.title,
+      category: newJob.category,
+      workersNeeded: newJob.workersNeeded,
+      dailyWage: newJob.dailyWage,
+      duration: newJob.duration,
+      startDate: newJob.startDate,
+      location: newJob.location,
+      description: newJob.description,
+      urgent: newJob.urgent
+    })
+  }).catch(() => {});
 }
 
 function getApplications() {
@@ -185,6 +243,17 @@ function applyForJob(jobId, workerInfo = {}) {
 
   apps.unshift(newApp);
   localStorage.setItem("kaamsetu_applications", JSON.stringify(apps));
+
+  // Sync to Backend API
+  const token = localStorage.getItem("kaamsetu_token");
+  fetch(`${API_BASE_URL}/jobs/${jobId}/apply`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  }).catch(() => {});
+
   return { success: true, message: "Application submitted successfully! Contractor has been notified." };
 }
 
@@ -204,6 +273,20 @@ function setCurrentUser(role, name, details = {}) {
 
 // Quick Demo Login (Judges Helper)
 function demoLogin(role) {
+  const identifier = role === 'worker' ? '9876012345' : '9876543210';
+  fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier, password: '1234', role })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.token) {
+        localStorage.setItem("kaamsetu_token", data.token);
+      }
+    })
+    .catch(() => {});
+
   if (role === "worker") {
     setCurrentUser("worker", "Ramesh Kumar", { trade: "Masonry (Rajmistri)", rate: 850 });
     window.location.href = "worker-dashboard.html";
