@@ -6,19 +6,27 @@
  * Uses environment variables to prevent leaking credentials.
  */
 
-// Load dotenv if available in runtime
+const path = require('path');
+// Load dotenv if available
 try {
     require('dotenv').config();
-} catch (e) {
-    // If dotenv is not installed yet, rely on existing process.env
-}
+} catch (e) {}
+try {
+    require('dotenv').config({ path: path.resolve(__dirname, '../backend/.env') });
+} catch (e) {}
+try {
+    require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+} catch (e) {}
 
 let createClient;
 try {
     createClient = require('@supabase/supabase-js').createClient;
 } catch (error) {
-    console.warn('[KaamSetu DB Warning] @supabase/supabase-js is not installed yet.');
-    console.warn('Run: npm install @supabase/supabase-js dotenv');
+    try {
+        createClient = require('../backend/node_modules/@supabase/supabase-js').createClient;
+    } catch (e2) {
+        // Silently handle if not installed
+    }
 }
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -32,9 +40,8 @@ function validateConfig() {
         missing.push('SUPABASE_ANON_KEY or SUPABASE_SERVICE_ROLE_KEY');
     }
 
-    if (missing.length > 0) {
-        console.error(`\n[KaamSetu DB Error] Missing required environment variables: ${missing.join(', ')}`);
-        console.error('Please create a .env file from .env.example with your Supabase credentials.\n');
+    if (missing.length > 0 && process.env.NODE_ENV !== 'test' && supabaseUrl) {
+        console.warn(`[KaamSetu DB Notice] Missing environment variables: ${missing.join(', ')}`);
     }
 }
 

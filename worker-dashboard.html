@@ -182,18 +182,59 @@
     </div>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
   <script>
     let activeJobsList = [];
 
-    function loadDashboardData() {
+    async function loadDashboardData() {
       const user = getCurrentUser();
       if (user && user.name) {
         document.getElementById('workerGreeting').textContent = `Namaste, ${user.name}`;
       }
 
-      activeJobsList = getJobs();
-      renderJobs(activeJobsList);
+      if (window.KaamSetuAPI) {
+        const jobsRes = await window.KaamSetuAPI.getJobs();
+        if (jobsRes.ok && jobsRes.data && jobsRes.data.jobs) {
+          activeJobsList = jobsRes.data.jobs.map(j => ({
+            id: j.id,
+            title: j.title,
+            category: j.category,
+            workersNeeded: j.workers_needed || j.workersNeeded || 1,
+            dailyWage: j.daily_wage || j.dailyWage || 800,
+            duration: j.duration || '1 Day',
+            startDate: j.start_date || j.startDate || 'Immediate',
+            location: j.location,
+            contractorName: j.contractor_name || j.contractorName || 'Verified Contractor',
+            description: j.description || '',
+            urgent: Boolean(j.urgent)
+          }));
+          renderJobs(activeJobsList);
+        } else {
+          activeJobsList = getJobs();
+          renderJobs(activeJobsList);
+        }
+
+        const appsRes = await window.KaamSetuAPI.getWorkerAssignedJobs();
+        if (appsRes.ok && appsRes.data && appsRes.data.assignments) {
+          const apiApps = appsRes.data.assignments.map(a => ({
+            id: a.id,
+            jobId: a.job_id || a.jobId,
+            jobTitle: a.job_title || a.jobTitle || 'Construction Work',
+            contractorName: a.contractor_name || a.contractorName || 'Contractor',
+            wage: a.agreed_wage || a.wage || 800,
+            location: a.location || 'Site Location',
+            status: a.assignment_status || a.status || 'Assigned',
+            appliedDate: 'Recently'
+          }));
+          renderApplicationsFromData(apiApps);
+          return;
+        }
+      } else {
+        activeJobsList = getJobs();
+        renderJobs(activeJobsList);
+      }
+
       renderApplications();
     }
 
@@ -251,8 +292,7 @@
       `).join('');
     }
 
-    function renderApplications() {
-      const apps = getApplications();
+    function renderApplicationsFromData(apps) {
       const container = document.getElementById('applicationsListContainer');
       const badge = document.getElementById('appsCountBadge');
       const statBadge = document.getElementById('statApplications');
@@ -304,7 +344,24 @@
       }).join('');
     }
 
-    function handleQuickApply(jobId) {
+    function renderApplications() {
+      const apps = getApplications();
+      renderApplicationsFromData(apps);
+    }
+
+    async function handleQuickApply(jobId) {
+      if (window.KaamSetuAPI) {
+        const res = await window.KaamSetuAPI.applyForJob(jobId);
+        if (res.ok) {
+          showToast(res.data.message || 'Application submitted successfully!', 'success');
+          loadDashboardData();
+          return;
+        } else if (res.status !== 0) {
+          showToast(res.data?.message || 'Failed to submit application.', 'info');
+          return;
+        }
+      }
+
       const user = getCurrentUser();
       const res = applyForJob(jobId, { name: user.name, trade: user.trade, phone: user.phone });
       if (res.success) {

@@ -128,15 +128,39 @@
     </div>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
   <script>
-    function handleContractorRegister(e) {
+    async function handleContractorRegister(e) {
       e.preventDefault();
       const company = document.getElementById('companyName').value;
       const person = document.getElementById('contactPerson').value;
       const phone = document.getElementById('contractorPhone').value;
       const email = document.getElementById('contractorEmail').value;
       const businessType = document.getElementById('businessType').value;
+      const location = document.getElementById('cityArea') ? document.getElementById('cityArea').value : 'Delhi NCR';
+
+      if (window.KaamSetuAPI) {
+        const res = await window.KaamSetuAPI.registerContractor({
+          companyName: company,
+          contactPerson: person,
+          phone,
+          email,
+          businessType,
+          location,
+          password: '1234'
+        });
+        if (res.ok) {
+          showToast(res.data.message || `Welcome ${company}! Account created.`, 'success');
+          setTimeout(() => {
+            window.location.href = 'contractor-dashboard.html';
+          }, 700);
+          return;
+        } else if (res.status !== 0) {
+          showToast(res.data?.message || 'Registration failed.', 'danger');
+          return;
+        }
+      }
 
       setCurrentUser('contractor', person, { company, phone, email, businessType });
       showToast(`Welcome ${company}! Your contractor account is ready.`, 'success');

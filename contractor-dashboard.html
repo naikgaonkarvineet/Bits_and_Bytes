@@ -159,60 +159,54 @@
     </div>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
   <script>
-    function loadContractorDashboard() {
-      const allJobs = getJobs();
-      // Filter jobs posted by Apex Infra or show all for demo
-      renderContractorJobs(allJobs);
+    async function loadContractorDashboard() {
+      if (window.KaamSetuAPI) {
+        const jobsRes = await window.KaamSetuAPI.getContractorJobs();
+        if (jobsRes.ok && jobsRes.data && jobsRes.data.jobs) {
+          const formattedJobs = jobsRes.data.jobs.map(j => ({
+            id: j.id,
+            title: j.title,
+            category: j.category,
+            workersNeeded: j.workers_needed || j.workersNeeded || 1,
+            dailyWage: j.daily_wage || j.dailyWage || 800,
+            duration: j.duration || '1 Day',
+            startDate: j.start_date || j.startDate || 'Immediate',
+            location: j.location,
+            urgent: Boolean(j.urgent)
+          }));
+          renderContractorJobs(formattedJobs);
+        } else {
+          renderContractorJobs(getJobs());
+        }
+
+        const assignRes = await window.KaamSetuAPI.getContractorAssignments();
+        if (assignRes.ok && assignRes.data && assignRes.data.assignments) {
+          const formattedApps = assignRes.data.assignments.map(a => ({
+            id: a.id,
+            jobId: a.job_id || a.jobId,
+            jobTitle: a.job_title || a.jobTitle || 'Site Work',
+            workerName: a.worker_name || a.workerName || 'Worker',
+            workerTrade: a.worker_trade || a.workerTrade || 'Masonry',
+            workerPhone: a.worker_phone || a.workerPhone || '+91 98765 43210',
+            wage: a.agreed_wage || a.wage || 800,
+            status: a.assignment_status || a.status || 'Assigned',
+            rating: '4.8',
+            appliedDate: 'Recently'
+          }));
+          renderContractorApplicantsFromData(formattedApps);
+          return;
+        }
+      } else {
+        renderContractorJobs(getJobs());
+      }
+
       renderContractorApplicants();
     }
 
-    function renderContractorJobs(jobs) {
-      const container = document.getElementById('contractorJobsList');
-      const badge = document.getElementById('postedJobsCount');
-      const stat = document.getElementById('statPostedJobs');
-
-      badge.textContent = jobs.length;
-      if (stat) stat.textContent = jobs.length;
-
-      container.innerHTML = jobs.map(job => `
-        <div class="card" style="padding: 1.25rem;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
-            <div>
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <h3 style="font-size: 1.15rem; margin: 0;">${job.title}</h3>
-                <span class="badge badge-primary">${job.category}</span>
-                ${job.urgent ? '<span class="badge badge-danger">⚡ Urgent</span>' : ''}
-              </div>
-              <p style="color: var(--slate-600); font-size: 0.85rem; margin: 0.25rem 0 0;">
-                📍 Site: ${job.location} &bull; Start Date: ${job.startDate} &bull; Duration: ${job.duration}
-              </p>
-            </div>
-
-            <div style="text-align: right;">
-              <div class="wage-tag">₹${job.dailyWage}</div>
-              <span style="font-size: 0.75rem; color: var(--slate-600);">per worker / day</span>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-100); padding-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="font-size: 0.85rem; color: var(--slate-600);">
-              Workers Needed: <strong>${job.workersNeeded}</strong> &bull; Status: <span class="badge badge-success">Open & Receiving Applications</span>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <a href="job-details.html?id=${job.id}" class="btn btn-outline btn-sm">Preview Listing</a>
-              <button class="btn btn-outline-primary btn-sm" onclick="showContractorTab('applicants')">
-                View Applicants (2)
-              </button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderContractorApplicants() {
-      const apps = getApplications();
+    function renderContractorApplicantsFromData(apps) {
       const container = document.getElementById('applicantsTableContainer');
       const badge = document.getElementById('applicantsCount');
       const stat = document.getElementById('statTotalApplicants');
@@ -269,7 +263,24 @@
       `).join('');
     }
 
-    function acceptWorker(appId) {
+    function renderContractorApplicants() {
+      const apps = getApplications();
+      renderContractorApplicantsFromData(apps);
+    }
+
+    async function acceptWorker(appId) {
+      if (window.KaamSetuAPI) {
+        const res = await window.KaamSetuAPI.updateContractorAssignmentStatus(appId, 'Accepted');
+        if (res.ok) {
+          showToast(`Worker application has been accepted and confirmed!`, 'success');
+          loadContractorDashboard();
+          return;
+        } else if (res.status !== 0) {
+          showToast(res.data?.message || 'Failed to accept worker.', 'info');
+          return;
+        }
+      }
+
       const apps = getApplications();
       const target = apps.find(a => a.id === appId);
       if (target) {

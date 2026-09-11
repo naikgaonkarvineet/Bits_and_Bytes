@@ -191,6 +191,7 @@
     </div>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
   <script>
     function updateLivePreview() {
@@ -215,13 +216,12 @@
       document.getElementById('prevUrgent').style.display = isUrgent ? 'inline-flex' : 'none';
     }
 
-    function handleJobPublish(e) {
+    async function handleJobPublish(e) {
       e.preventDefault();
       const user = getCurrentUser();
       const companyName = user.company || "Apex Infrastructure Ltd.";
 
-      const newJob = {
-        id: "job-" + Date.now(),
+      const jobData = {
         title: document.getElementById('jobTitle').value,
         category: document.getElementById('jobCategory').value,
         workersNeeded: parseInt(document.getElementById('workersCount').value) || 1,
@@ -229,11 +229,30 @@
         duration: document.getElementById('workDuration').value,
         startDate: document.getElementById('startDate').value,
         location: document.getElementById('siteLocation').value,
+        description: document.getElementById('jobDesc').value,
+        urgent: document.getElementById('urgentCheckbox').checked
+      };
+
+      if (window.KaamSetuAPI) {
+        const res = await window.KaamSetuAPI.createJob(jobData);
+        if (res.ok) {
+          showToast(res.data.message || 'Job requirement published successfully!', 'success');
+          setTimeout(() => {
+            window.location.href = 'contractor-dashboard.html';
+          }, 700);
+          return;
+        } else if (res.status !== 0) {
+          showToast(res.data?.message || 'Failed to publish job requirement.', 'danger');
+          return;
+        }
+      }
+
+      const newJob = {
+        id: "job-" + Date.now(),
+        ...jobData,
         contractorName: companyName,
         contractorContact: user.phone || "+91 98765 43210",
-        description: document.getElementById('jobDesc').value,
         requirements: ["Skill verification on site", "Punctual attendance", "Standard safety gear"],
-        urgent: document.getElementById('urgentCheckbox').checked,
         postedAt: "Just now"
       };
 

@@ -53,12 +53,39 @@
     </div>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
   <script>
-    function loadJobDetails() {
+    async function loadJobDetails() {
       const urlParams = new URLSearchParams(window.location.search);
       const jobId = urlParams.get('id') || 'job-101';
-      const job = getJobById(jobId);
+      let job = null;
+
+      if (window.KaamSetuAPI) {
+        const res = await window.KaamSetuAPI.getJobById(jobId);
+        if (res.ok && res.data && res.data.job) {
+          const j = res.data.job;
+          job = {
+            id: j.id,
+            title: j.title,
+            category: j.category,
+            workersNeeded: j.workers_needed || j.workersNeeded || 1,
+            dailyWage: j.daily_wage || j.dailyWage || 800,
+            duration: j.duration || '1 Day',
+            startDate: j.start_date || j.startDate || 'Immediate',
+            location: j.location,
+            contractorName: j.contractor_name || j.contractorName || 'Verified Contractor',
+            description: j.description || '',
+            requirements: j.requirements || ["Skill verification on site", "Standard tools required"],
+            urgent: Boolean(j.urgent),
+            postedAt: j.created_at ? new Date(j.created_at).toLocaleDateString() : 'recently'
+          };
+        }
+      }
+
+      if (!job) {
+        job = getJobById(jobId);
+      }
 
       const container = document.getElementById('jobDetailContainer');
       if (!job) {
@@ -202,11 +229,25 @@
       `;
     }
 
-    function triggerApply(jobId) {
+    async function triggerApply(jobId) {
+      const btn = document.getElementById('applyButton');
+      if (window.KaamSetuAPI) {
+        const res = await window.KaamSetuAPI.applyForJob(jobId);
+        if (res.ok) {
+          btn.textContent = '✓ Applied Successfully!';
+          btn.className = 'btn btn-success btn-block btn-lg';
+          btn.disabled = true;
+          showToast(res.data.message || 'Application submitted successfully!', 'success');
+          return;
+        } else if (res.status !== 0) {
+          showToast(res.data?.message || 'Failed to submit application.', 'info');
+          return;
+        }
+      }
+
       const user = getCurrentUser();
       const res = applyForJob(jobId, { name: user.name, trade: user.trade, phone: user.phone });
       
-      const btn = document.getElementById('applyButton');
       if (res.success) {
         btn.textContent = '✓ Applied Successfully!';
         btn.className = 'btn btn-success btn-block btn-lg';

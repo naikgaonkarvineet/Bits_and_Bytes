@@ -1,9 +1,9 @@
 /**
  * KaamSetu Frontend-Backend API Client Bridge
- * Member 2 - Backend Integration
+ * Member 4 - Integration Engineering
  */
 
-const API_BASE = (window.location.port === '5000' || window.location.origin.includes(':5000'))
+const API_BASE = (typeof window !== 'undefined' && (window.location.port === '5000' || window.location.origin.includes(':5000')))
   ? '/api'
   : 'http://localhost:5000/api';
 
@@ -18,6 +18,27 @@ const KaamSetuAPI = {
     } else {
       localStorage.removeItem('kaamsetu_token');
     }
+  },
+
+  getUser() {
+    const raw = localStorage.getItem('kaamsetu_user');
+    if (raw) {
+      try { return JSON.parse(raw); } catch (e) {}
+    }
+    return null;
+  },
+
+  setUser(user) {
+    if (user) {
+      localStorage.setItem('kaamsetu_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('kaamsetu_user');
+    }
+  },
+
+  logout() {
+    localStorage.removeItem('kaamsetu_token');
+    localStorage.removeItem('kaamsetu_user');
   },
 
   async request(endpoint, options = {}) {
@@ -51,8 +72,11 @@ const KaamSetuAPI = {
       method: 'POST',
       body: JSON.stringify({ identifier, password, role })
     });
-    if (res.ok && res.data.token) {
+    if (res.ok && res.data && res.data.token) {
       this.setToken(res.data.token);
+      if (res.data.user) {
+        this.setUser(res.data.user);
+      }
     }
     return res;
   },
@@ -62,8 +86,11 @@ const KaamSetuAPI = {
       method: 'POST',
       body: JSON.stringify(workerData)
     });
-    if (res.ok && res.data.token) {
+    if (res.ok && res.data && res.data.token) {
       this.setToken(res.data.token);
+      if (res.data.user) {
+        this.setUser(res.data.user);
+      }
     }
     return res;
   },
@@ -73,14 +100,21 @@ const KaamSetuAPI = {
       method: 'POST',
       body: JSON.stringify(contractorData)
     });
-    if (res.ok && res.data.token) {
+    if (res.ok && res.data && res.data.token) {
       this.setToken(res.data.token);
+      if (res.data.user) {
+        this.setUser(res.data.user);
+      }
     }
     return res;
   },
 
   async getMe() {
-    return await this.request('/auth/me');
+    const res = await this.request('/auth/me');
+    if (res.ok && res.data && res.data.user) {
+      this.setUser(res.data.user);
+    }
+    return res;
   },
 
   // Jobs
@@ -164,4 +198,8 @@ const KaamSetuAPI = {
 
 if (typeof window !== 'undefined') {
   window.KaamSetuAPI = KaamSetuAPI;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = KaamSetuAPI;
 }

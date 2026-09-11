@@ -114,6 +114,7 @@
     </div>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
   <script>
     let currentRole = 'worker';
@@ -145,9 +146,26 @@
       }
     }
 
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
       const identifier = document.getElementById('loginIdentifier').value;
+      const password = document.getElementById('loginPassword').value || '1234';
+
+      if (window.KaamSetuAPI) {
+        const res = await window.KaamSetuAPI.login(identifier, password, currentRole);
+        if (res.ok) {
+          showToast(res.data.message || `Login successful! Welcome back.`, 'success');
+          setTimeout(() => {
+            window.location.href = currentRole === 'worker' ? 'worker-dashboard.html' : 'contractor-dashboard.html';
+          }, 600);
+          return;
+        } else if (res.status !== 0) {
+          showToast(res.data?.message || 'Login failed. Please check your credentials.', 'danger');
+          return;
+        }
+      }
+
+      // Local fallback if API server is offline
       if (currentRole === 'worker') {
         setCurrentUser('worker', 'Ramesh Kumar', { phone: identifier, trade: 'Masonry' });
         showToast('Login successful! Welcome Ramesh.', 'success');

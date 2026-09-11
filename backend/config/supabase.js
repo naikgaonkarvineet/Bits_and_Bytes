@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+const path = require('path');
 const {
   SEED_WORKERS,
   SEED_CONTRACTORS,
@@ -7,29 +7,25 @@ const {
   SEED_PAYMENTS
 } = require('./seedData');
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+// Import authoritative Supabase client and DB service built by Database team (Member 3)
+const { supabase, supabaseAdmin, testConnection } = require(path.resolve(__dirname, '../../database/supabaseClient'));
+const KaamSetuDB = require(path.resolve(__dirname, '../../database/dbService'));
 
-let supabase = null;
+const activeClient = () => supabaseAdmin || supabase;
+
 const isSupabaseConfigured = Boolean(
-  supabaseUrl && 
-  supabaseAnonKey && 
-  supabaseUrl !== 'https://your-project.supabase.co' &&
-  !supabaseUrl.includes('your-project')
+  process.env.SUPABASE_URL &&
+  (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) &&
+  !process.env.SUPABASE_URL.includes('your-project')
 );
 
 if (isSupabaseConfigured) {
-  try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-    console.log('✓ Connected to Supabase at:', supabaseUrl);
-  } catch (err) {
-    console.warn('⚠️ Could not initialize Supabase client:', err.message);
-  }
+  console.log('✓ Connected to Supabase at:', process.env.SUPABASE_URL);
 } else {
   console.log('ℹ️ Supabase credentials not set in .env. Operating in high-speed local in-memory database mode with seed data.');
 }
 
-// In-Memory Database Store
+// In-Memory Database Store (Fallback for offline/local testing)
 const memoryStore = {
   workers: JSON.parse(JSON.stringify(SEED_WORKERS)),
   contractors: JSON.parse(JSON.stringify(SEED_CONTRACTORS)),
@@ -38,21 +34,95 @@ const memoryStore = {
   payments: JSON.parse(JSON.stringify(SEED_PAYMENTS))
 };
 
+// Helper to normalize Supabase user+worker or user+contractor objects to flat backend DTOs
+function normalizeWorker(data) {
+  if (!data) return null;
+  if (data.users && data.workers) {
+    const w = Array.isArray(data.workers) ? data.workers[0] : data.workers;
+    return {
+      id: w?.id || data.id,
+      user_id: data.id,
+      name: data.name,
+      phone: data.mobile,
+      trade: w?.skill || 'General Labor',
+      daily_wage: 800,
+      experience: w?.experience || '1-2 Years',
+      location: data.location,
+      preferred_lang: 'Hindi',
+      aadhar_verified: true,
+      password_hash: data.password_hash,
+      created_at: data.created_at
+    };
+  }
+  return {
+    ...data,
+    phone: data.phone || data.mobile,
+    trade: data.trade || data.skill || 'General Labor',
+    daily_wage: Number(data.daily_wage || 800)
+  };
+}
+
+function normalizeContractor(data) {
+  if (!data) return null;
+  if (data.users && data.contractors) {
+    const c = Array.isArray(data.contractors) ? data.contractors[0] : data.contractors;
+    return {
+      id: c?.id || data.id,
+      user_id: data.id,
+      company_name: c?.company_name || data.name,
+      contact_person: data.name,
+      phone: data.mobile,
+      email: data.email || null,
+      business_type: c?.work_category || 'General Civil Contractor',
+      location: data.location,
+      gst_id: null,
+      password_hash: data.password_hash,
+      created_at: data.created_at
+    };
+  }
+  return {
+    ...data,
+    phone: data.phone || data.mobile,
+    contact_person: data.contact_person || data.name || data.company_name
+  };
+}
+
 // Unified Data Access Helper
 const db = {
   // Workers
   async findWorkerByPhone(phone) {
-    if (supabase) {
-      const { data, error } = await supabase.from('workers').select('*').eq('phone', phone).single();
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const user = await KaamSetuDB.getUserByMobile(phone);
+        if (user && (user.role === 'worker' || (user.workers && user.workers.length > 0))) {
+          return normalizeWorker(user);
+        }
+        // Direct table query fallback if schema is flat
+        const { data, error } = await activeClient().from('workers').select('*').eq('phone', phone).maybeSingle();
+        if (!error && data) return normalizeWorker(data);
+      } catch (err) {
+        console.warn('Supabase findWorkerByPhone fallback:', err.message);
+      }
     }
     return memoryStore.workers.find(w => w.phone === phone) || null;
   },
 
   async findWorkerById(id) {
-    if (supabase) {
-      const { data, error } = await supabase.from('workers').select('*').eq('id', id).single();
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('workers').select('*').eq('id', id).single();
+        if (!error && data) return normalizeWorker(data);
+
+        // Try user_id match
+        const { data: userData, error: userErr } = await activeClient()
+          .from('users')
+          .select('*, workers(*)')
+          .eq('id', id)
+          .maybeSingle();
+        if (!userErr && userData) return normalizeWorker(userData);
+      } catch (err) {
+        console.warn('Supabase findWorkerById fallback:', err.message);
+      }
     }
     return memoryStore.workers.find(w => w.id === id) || null;
   },
@@ -65,13 +135,36 @@ const db = {
       ...workerData
     };
 
-    if (supabase) {
-      const { data, error } = await supabase.from('workers').insert([newWorker]).select().single();
-      if (!error && data) {
-        memoryStore.workers.push(data);
-        return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        // Attempt insert using KaamSetuDB
+        const res = await KaamSetuDB.registerUser({
+          name: workerData.name,
+          mobile: workerData.phone,
+          password_hash: workerData.password_hash || 'hashed_pw',
+          role: 'worker',
+          location: workerData.location || 'Noida, UP',
+          profileData: {
+            skill: workerData.trade || 'Masonry',
+            experience: workerData.experience || '3-5 Years'
+          }
+        });
+        if (res && res.worker) {
+          const created = normalizeWorker({ ...res.user, workers: [res.worker] });
+          memoryStore.workers.push(created);
+          return created;
+        }
+      } catch (err) {
+        // Fallback to direct workers table insert
+        try {
+          const { data, error } = await activeClient().from('workers').insert([newWorker]).select().single();
+          if (!error && data) {
+            memoryStore.workers.push(data);
+            return data;
+          }
+        } catch (e) {}
+        console.warn('Supabase worker insert fallback:', err.message);
       }
-      console.warn('Supabase worker insert fallback:', error?.message);
     }
 
     memoryStore.workers.push(newWorker);
@@ -79,13 +172,15 @@ const db = {
   },
 
   async updateWorker(id, updateData) {
-    if (supabase) {
-      const { data, error } = await supabase.from('workers').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-      if (!error && data) {
-        const idx = memoryStore.workers.findIndex(w => w.id === id);
-        if (idx !== -1) memoryStore.workers[idx] = data;
-        return data;
-      }
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('workers').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+        if (!error && data) {
+          const idx = memoryStore.workers.findIndex(w => w.id === id);
+          if (idx !== -1) memoryStore.workers[idx] = data;
+          return data;
+        }
+      } catch (err) {}
     }
 
     const worker = memoryStore.workers.find(w => w.id === id);
@@ -96,21 +191,40 @@ const db = {
 
   // Contractors
   async findContractorByIdentifier(identifier) {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('contractors')
-        .select('*')
-        .or(`phone.eq.${identifier},email.eq.${identifier}`)
-        .limit(1);
-      if (!error && data && data.length > 0) return data[0];
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const user = await KaamSetuDB.getUserByMobile(identifier);
+        if (user && (user.role === 'contractor' || (user.contractors && user.contractors.length > 0))) {
+          return normalizeContractor(user);
+        }
+        const { data, error } = await activeClient()
+          .from('contractors')
+          .select('*')
+          .or(`phone.eq.${identifier},email.eq.${identifier}`)
+          .limit(1);
+        if (!error && data && data.length > 0) return normalizeContractor(data[0]);
+      } catch (err) {
+        console.warn('Supabase findContractorByIdentifier fallback:', err.message);
+      }
     }
     return memoryStore.contractors.find(c => c.phone === identifier || c.email === identifier) || null;
   },
 
   async findContractorById(id) {
-    if (supabase) {
-      const { data, error } = await supabase.from('contractors').select('*').eq('id', id).single();
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('contractors').select('*').eq('id', id).single();
+        if (!error && data) return normalizeContractor(data);
+
+        const { data: userData, error: userErr } = await activeClient()
+          .from('users')
+          .select('*, contractors(*)')
+          .eq('id', id)
+          .maybeSingle();
+        if (!userErr && userData) return normalizeContractor(userData);
+      } catch (err) {
+        console.warn('Supabase findContractorById fallback:', err.message);
+      }
     }
     return memoryStore.contractors.find(c => c.id === id) || null;
   },
@@ -123,13 +237,34 @@ const db = {
       ...contractorData
     };
 
-    if (supabase) {
-      const { data, error } = await supabase.from('contractors').insert([newContractor]).select().single();
-      if (!error && data) {
-        memoryStore.contractors.push(data);
-        return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const res = await KaamSetuDB.registerUser({
+          name: contractorData.contact_person || contractorData.company_name,
+          mobile: contractorData.phone,
+          password_hash: contractorData.password_hash || 'hashed_pw',
+          role: 'contractor',
+          location: contractorData.location || 'Delhi NCR',
+          profileData: {
+            company_name: contractorData.company_name,
+            work_category: contractorData.business_type || 'General Civil Contractor'
+          }
+        });
+        if (res && res.contractor) {
+          const created = normalizeContractor({ ...res.user, contractors: [res.contractor] });
+          memoryStore.contractors.push(created);
+          return created;
+        }
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('contractors').insert([newContractor]).select().single();
+          if (!error && data) {
+            memoryStore.contractors.push(data);
+            return data;
+          }
+        } catch (e) {}
+        console.warn('Supabase contractor insert fallback:', err.message);
       }
-      console.warn('Supabase contractor insert fallback:', error?.message);
     }
 
     memoryStore.contractors.push(newContractor);
@@ -137,13 +272,15 @@ const db = {
   },
 
   async updateContractor(id, updateData) {
-    if (supabase) {
-      const { data, error } = await supabase.from('contractors').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-      if (!error && data) {
-        const idx = memoryStore.contractors.findIndex(c => c.id === id);
-        if (idx !== -1) memoryStore.contractors[idx] = data;
-        return data;
-      }
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('contractors').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+        if (!error && data) {
+          const idx = memoryStore.contractors.findIndex(c => c.id === id);
+          if (idx !== -1) memoryStore.contractors[idx] = data;
+          return data;
+        }
+      } catch (err) {}
     }
 
     const contractor = memoryStore.contractors.find(c => c.id === id);
@@ -154,19 +291,23 @@ const db = {
 
   // Jobs
   async getAllJobs(filters = {}) {
-    if (supabase) {
-      let query = supabase.from('jobs').select('*');
-      if (filters.category && filters.category !== 'All') {
-        query = query.ilike('category', `%${filters.category}%`);
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        let query = activeClient().from('jobs').select('*');
+        if (filters.category && filters.category !== 'All') {
+          query = query.ilike('category', `%${filters.category}%`);
+        }
+        if (filters.status) {
+          query = query.eq('status', filters.status);
+        }
+        if (filters.minWage) {
+          query = query.gte('daily_wage', Number(filters.minWage));
+        }
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (!error && data) return data;
+      } catch (err) {
+        console.warn('Supabase getAllJobs fallback:', err.message);
       }
-      if (filters.status) {
-        query = query.eq('status', filters.status);
-      }
-      if (filters.minWage) {
-        query = query.gte('daily_wage', Number(filters.minWage));
-      }
-      const { data, error } = await query.order('created_at', { ascending: false });
-      if (!error && data) return data;
     }
 
     let jobs = [...memoryStore.jobs];
@@ -181,7 +322,7 @@ const db = {
     }
     if (filters.search) {
       const q = filters.search.toLowerCase();
-      jobs = jobs.filter(j => 
+      jobs = jobs.filter(j =>
         j.title.toLowerCase().includes(q) ||
         j.location.toLowerCase().includes(q) ||
         (j.contractor_name && j.contractor_name.toLowerCase().includes(q))
@@ -191,17 +332,26 @@ const db = {
   },
 
   async getJobById(id) {
-    if (supabase) {
-      const { data, error } = await supabase.from('jobs').select('*').eq('id', id).single();
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('jobs').select('*').eq('id', id).single();
+        if (!error && data) return data;
+      } catch (err) {}
     }
     return memoryStore.jobs.find(j => j.id === id) || null;
   },
 
   async getJobsByContractor(contractorId) {
-    if (supabase) {
-      const { data, error } = await supabase.from('jobs').select('*').eq('contractor_id', contractorId).order('created_at', { ascending: false });
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const jobs = await KaamSetuDB.getContractorJobs(contractorId);
+        if (jobs) return jobs;
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('jobs').select('*').eq('contractor_id', contractorId).order('created_at', { ascending: false });
+          if (!error && data) return data;
+        } catch (e) {}
+      }
     }
     return memoryStore.jobs.filter(j => j.contractor_id === contractorId);
   },
@@ -215,13 +365,33 @@ const db = {
       ...jobData
     };
 
-    if (supabase) {
-      const { data, error } = await supabase.from('jobs').insert([newJob]).select().single();
-      if (!error && data) {
-        memoryStore.jobs.unshift(data);
-        return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const dbJob = await KaamSetuDB.createJob({
+          contractor_id: jobData.contractor_id,
+          title: jobData.title,
+          category: jobData.category,
+          location: jobData.location,
+          workers_required: jobData.workers_needed || jobData.workers_required || 1,
+          wage: jobData.daily_wage,
+          start_date: jobData.start_date,
+          end_date: jobData.end_date,
+          description: jobData.description
+        });
+        if (dbJob) {
+          memoryStore.jobs.unshift(dbJob);
+          return dbJob;
+        }
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('jobs').insert([newJob]).select().single();
+          if (!error && data) {
+            memoryStore.jobs.unshift(data);
+            return data;
+          }
+        } catch (e) {}
+        console.warn('Supabase job insert fallback:', err.message);
       }
-      console.warn('Supabase job insert fallback:', error?.message);
     }
 
     memoryStore.jobs.unshift(newJob);
@@ -229,13 +399,15 @@ const db = {
   },
 
   async updateJob(id, updateData) {
-    if (supabase) {
-      const { data, error } = await supabase.from('jobs').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-      if (!error && data) {
-        const idx = memoryStore.jobs.findIndex(j => j.id === id);
-        if (idx !== -1) memoryStore.jobs[idx] = data;
-        return data;
-      }
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('jobs').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+        if (!error && data) {
+          const idx = memoryStore.jobs.findIndex(j => j.id === id);
+          if (idx !== -1) memoryStore.jobs[idx] = data;
+          return data;
+        }
+      } catch (err) {}
     }
 
     const job = memoryStore.jobs.find(j => j.id === id);
@@ -246,41 +418,64 @@ const db = {
 
   // Assignments
   async getAssignmentsByWorker(workerId) {
-    if (supabase) {
-      const { data, error } = await supabase.from('assignments').select('*').eq('worker_id', workerId).order('applied_at', { ascending: false });
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const assignments = await KaamSetuDB.getWorkerAssignments(workerId);
+        if (assignments) return assignments;
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('job_assignments').select('*').eq('worker_id', workerId).order('assigned_at', { ascending: false });
+          if (!error && data) return data;
+        } catch (e) {}
+      }
     }
     return memoryStore.assignments.filter(a => a.worker_id === workerId);
   },
 
   async getAssignmentsByContractor(contractorId) {
-    if (supabase) {
-      const { data, error } = await supabase.from('assignments').select('*').eq('contractor_id', contractorId).order('applied_at', { ascending: false });
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('job_assignments').select('*').eq('contractor_id', contractorId);
+        if (!error && data) return data;
+        const { data: d2, error: e2 } = await activeClient().from('assignments').select('*').eq('contractor_id', contractorId);
+        if (!e2 && d2) return d2;
+      } catch (err) {}
     }
     return memoryStore.assignments.filter(a => a.contractor_id === contractorId);
   },
 
   async getAssignmentsByJob(jobId) {
-    if (supabase) {
-      const { data, error } = await supabase.from('assignments').select('*').eq('job_id', jobId);
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('job_assignments').select('*').eq('job_id', jobId);
+        if (!error && data) return data;
+        const { data: d2, error: e2 } = await activeClient().from('assignments').select('*').eq('job_id', jobId);
+        if (!e2 && d2) return d2;
+      } catch (err) {}
     }
     return memoryStore.assignments.filter(a => a.job_id === jobId);
   },
 
   async findAssignment(jobId, workerId) {
-    if (supabase) {
-      const { data, error } = await supabase.from('assignments').select('*').eq('job_id', jobId).eq('worker_id', workerId).maybeSingle();
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('job_assignments').select('*').eq('job_id', jobId).eq('worker_id', workerId).maybeSingle();
+        if (!error && data) return data;
+        const { data: d2, error: e2 } = await activeClient().from('assignments').select('*').eq('job_id', jobId).eq('worker_id', workerId).maybeSingle();
+        if (!e2 && d2) return d2;
+      } catch (err) {}
     }
     return memoryStore.assignments.find(a => a.job_id === jobId && a.worker_id === workerId) || null;
   },
 
   async findAssignmentById(id) {
-    if (supabase) {
-      const { data, error } = await supabase.from('assignments').select('*').eq('id', id).single();
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('job_assignments').select('*').eq('id', id).single();
+        if (!error && data) return data;
+        const { data: d2, error: e2 } = await activeClient().from('assignments').select('*').eq('id', id).single();
+        if (!e2 && d2) return d2;
+      } catch (err) {}
     }
     return memoryStore.assignments.find(a => a.id === id) || null;
   },
@@ -295,13 +490,28 @@ const db = {
       ...assignmentData
     };
 
-    if (supabase) {
-      const { data, error } = await supabase.from('assignments').insert([newAssignment]).select().single();
-      if (!error && data) {
-        memoryStore.assignments.unshift(data);
-        return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const res = await KaamSetuDB.assignWorkerToJob({
+          job_id: assignmentData.job_id,
+          worker_id: assignmentData.worker_id,
+          contractor_id: assignmentData.contractor_id,
+          agreed_wage: assignmentData.agreed_wage
+        });
+        if (res) {
+          memoryStore.assignments.unshift(res);
+          return res;
+        }
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('job_assignments').insert([newAssignment]).select().single();
+          if (!error && data) {
+            memoryStore.assignments.unshift(data);
+            return data;
+          }
+        } catch (e) {}
+        console.warn('Supabase assignment insert fallback:', err.message);
       }
-      console.warn('Supabase assignment insert fallback:', error?.message);
     }
 
     memoryStore.assignments.unshift(newAssignment);
@@ -309,12 +519,32 @@ const db = {
   },
 
   async updateAssignment(id, updateData) {
-    if (supabase) {
-      const { data, error } = await supabase.from('assignments').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-      if (!error && data) {
-        const idx = memoryStore.assignments.findIndex(a => a.id === id);
-        if (idx !== -1) memoryStore.assignments[idx] = data;
-        return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        if (updateData.work_status) {
+          const updated = await KaamSetuDB.updateWorkProgress(id, updateData.work_status);
+          if (updated) {
+            const idx = memoryStore.assignments.findIndex(a => a.id === id);
+            if (idx !== -1) memoryStore.assignments[idx] = updated;
+            return updated;
+          }
+        } else if (updateData.assignment_status) {
+          const updated = await KaamSetuDB.respondToAssignment(id, updateData.assignment_status);
+          if (updated) {
+            const idx = memoryStore.assignments.findIndex(a => a.id === id);
+            if (idx !== -1) memoryStore.assignments[idx] = updated;
+            return updated;
+          }
+        }
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('job_assignments').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+          if (!error && data) {
+            const idx = memoryStore.assignments.findIndex(a => a.id === id);
+            if (idx !== -1) memoryStore.assignments[idx] = data;
+            return data;
+          }
+        } catch (e) {}
       }
     }
 
@@ -326,25 +556,41 @@ const db = {
 
   // Payments
   async getPaymentsByWorker(workerId) {
-    if (supabase) {
-      const { data, error } = await supabase.from('payments').select('*').eq('worker_id', workerId).order('created_at', { ascending: false });
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const payments = await KaamSetuDB.getWorkerPayments(workerId);
+        if (payments) return payments;
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('payments').select('*').eq('worker_id', workerId).order('created_at', { ascending: false });
+          if (!error && data) return data;
+        } catch (e) {}
+      }
     }
     return memoryStore.payments.filter(p => p.worker_id === workerId);
   },
 
   async getPaymentsByContractor(contractorId) {
-    if (supabase) {
-      const { data, error } = await supabase.from('payments').select('*').eq('contractor_id', contractorId).order('created_at', { ascending: false });
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const payments = await KaamSetuDB.getPendingPayments(contractorId);
+        if (payments) return payments;
+      } catch (err) {
+        try {
+          const { data, error } = await activeClient().from('payments').select('*').eq('contractor_id', contractorId).order('created_at', { ascending: false });
+          if (!error && data) return data;
+        } catch (e) {}
+      }
     }
     return memoryStore.payments.filter(p => p.contractor_id === contractorId);
   },
 
   async findPaymentById(id) {
-    if (supabase) {
-      const { data, error } = await supabase.from('payments').select('*').eq('id', id).single();
-      if (!error && data) return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('payments').select('*').eq('id', id).single();
+        if (!error && data) return data;
+      } catch (err) {}
     }
     return memoryStore.payments.find(p => p.id === id) || null;
   },
@@ -359,13 +605,16 @@ const db = {
       ...paymentData
     };
 
-    if (supabase) {
-      const { data, error } = await supabase.from('payments').insert([newPayment]).select().single();
-      if (!error && data) {
-        memoryStore.payments.unshift(data);
-        return data;
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        const { data, error } = await activeClient().from('payments').insert([newPayment]).select().single();
+        if (!error && data) {
+          memoryStore.payments.unshift(data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase payment insert fallback:', err.message);
       }
-      console.warn('Supabase payment insert fallback:', error?.message);
     }
 
     memoryStore.payments.unshift(newPayment);
@@ -373,13 +622,23 @@ const db = {
   },
 
   async updatePayment(id, updateData) {
-    if (supabase) {
-      const { data, error } = await supabase.from('payments').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-      if (!error && data) {
-        const idx = memoryStore.payments.findIndex(p => p.id === id);
-        if (idx !== -1) memoryStore.payments[idx] = data;
-        return data;
-      }
+    if (isSupabaseConfigured && activeClient()) {
+      try {
+        if (updateData.payment_status === 'Paid') {
+          const updated = await KaamSetuDB.markPaymentPaid(id);
+          if (updated) {
+            const idx = memoryStore.payments.findIndex(p => p.id === id);
+            if (idx !== -1) memoryStore.payments[idx] = updated;
+            return updated;
+          }
+        }
+        const { data, error } = await activeClient().from('payments').update({ ...updateData, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+        if (!error && data) {
+          const idx = memoryStore.payments.findIndex(p => p.id === id);
+          if (idx !== -1) memoryStore.payments[idx] = data;
+          return data;
+        }
+      } catch (err) {}
     }
 
     const payment = memoryStore.payments.find(p => p.id === id);
@@ -391,5 +650,7 @@ const db = {
 
 module.exports = {
   supabase,
+  supabaseAdmin,
+  testConnection,
   db
 };
