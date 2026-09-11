@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KaamSetu - Connecting Daily-Wage Workers with Trusted Contractors</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-icon">🔨</span>
+        KaamSetu
+        <span class="brand-badge">MVP</span>
+      </a>
+
+      <button class="hamburger" id="hamburgerBtn" aria-label="Toggle navigation">☰</button>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html" class="nav-link active">Home</a></li>
+        <li><a href="worker-dashboard.html" class="nav-link">Find Jobs</a></li>
+        <li><a href="contractor-dashboard.html" class="nav-link">Contractor Portal</a></li>
+        <li><a href="worker-profile.html" class="nav-link">Worker Profile</a></li>
+        <li><a href="contractor-profile.html" class="nav-link">Contractor Profile</a></li>
+        <li class="mobile-nav-actions">
+          <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+          <a href="worker-register.html" class="btn btn-primary btn-sm">Worker Register</a>
+          <a href="contractor-register.html" class="btn btn-accent btn-sm">Contractor Register</a>
+        </li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="worker-register.html" class="btn btn-primary btn-sm">Join as Worker</a>
+        <a href="contractor-register.html" class="btn btn-accent btn-sm">Hire Workers</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content" style="padding-top: 0;">
+    
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="badge badge-accent" style="margin-bottom: 1rem; font-size: 0.9rem;">
+          🇮🇳 India's Digital Bridge for Skilled Daily-Wage Labor
+        </div>
+        <h1>Fair Wages. Direct Hiring.<br><span style="color: var(--primary);">No Middlemen.</span></h1>
+        <p class="lead">
+          KaamSetu connects daily-wage tradespeople—masons, carpenters, plumbers, painters, and electricians—with certified contractors for transparent, reliable daily work.
+        </p>
+
+        <div class="hero-actions">
+          <a href="worker-dashboard.html" class="btn btn-primary btn-lg">
+            🔍 Find Daily Work (Worker)
+          </a>
+          <a href="create-job.html" class="btn btn-accent btn-lg">
+            ➕ Post a Job (Contractor)
+          </a>
+        </div>
+
+        <!-- Hackathon Demo Quick Access Box -->
+        <div class="auth-wrapper" style="margin-top: 2rem;">
+          <div class="demo-box">
+            <p>⚡ Hackathon Demo Shortcuts: Explore the platform instantly</p>
+            <div class="demo-buttons">
+              <button onclick="demoLogin('worker')" class="btn btn-sm btn-outline-primary">
+                👤 Demo as Worker (Ramesh)
+              </button>
+              <button onclick="demoLogin('contractor')" class="btn btn-sm btn-outline">
+                🏗️ Demo as Contractor (Apex Infra)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Metrics Section -->
+    <section style="padding: 2.5rem 0; background: var(--white); border-bottom: 1px solid var(--slate-200);">
+      <div class="container">
+        <div class="stats-grid" style="margin-bottom: 0;">
+          <div class="stat-card">
+            <div class="stat-icon blue">👷</div>
+            <div>
+              <div class="stat-value">15,400+</div>
+              <div class="stat-label">Verified Skilled Workers</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber">🏗️</div>
+            <div>
+              <div class="stat-value">2,850+</div>
+              <div class="stat-label">Active Construction Sites</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">₹</div>
+            <div>
+              <div class="stat-value">100%</div>
+              <div class="stat-label">Direct & Fair Daily Wage Payouts</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">⏱️</div>
+            <div>
+              <div class="stat-value">&lt; 15 Mins</div>
+              <div class="stat-label">Average Hiring Match Time</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Popular Trades & Categories -->
+    <section style="padding: 3.5rem 0;">
+      <div class="container">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+          <h2>Popular Trade Categories</h2>
+          <p style="color: var(--slate-600);">Instant work matching across high-demand construction skills</p>
+        </div>
+
+        <div class="grid grid-cols-3">
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🧱</div>
+            <h3>Masonry (Rajmistri)</h3>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">Brickwork, plastering, tile setting, concrete foundation.</p>
+            <div class="wage-tag">Avg: ₹800 - ₹1,000 / day</div>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🪚</div>
+            <h3>Carpentry (Badhai)</h3>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">Shuttering, doors & windows, wood framing, modular assembly.</p>
+            <div class="wage-tag">Avg: ₹750 - ₹950 / day</div>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎨</div>
+            <h3>Painting & Finishing</h3>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">Putty application, emulsion primer, exterior weather-coating.</p>
+            <div class="wage-tag">Avg: ₹700 - ₹900 / day</div>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔧</div>
+            <h3>Plumbing (Plumber)</h3>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">CPVC piping, sanitary installations, drainage line repairs.</p>
+            <div class="wage-tag">Avg: ₹850 - ₹1,100 / day</div>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⚡</div>
+            <h3>Electrical (Bijli Mistri)</h3>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">Slab conduit piping, wiring, distribution box fitting.</p>
+            <div class="wage-tag">Avg: ₹750 - ₹950 / day</div>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🦺</div>
+            <h3>Skilled Labor / Helpers</h3>
+            <p style="color: var(--slate-600); font-size: 0.9rem;">Material loading, concrete mixing assistance, site logistics.</p>
+            <div class="wage-tag">Avg: ₹600 - ₹750 / day</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section style="padding: 3.5rem 0; background: var(--white); border-top: 1px solid var(--slate-200); border-bottom: 1px solid var(--slate-200);">
+      <div class="container">
+        <div style="text-align: center; margin-bottom: 3rem;">
+          <h2>How KaamSetu Works</h2>
+          <p style="color: var(--slate-600);">Simple, accessible, and fast for both workers and site contractors</p>
+        </div>
+
+        <div class="grid grid-cols-2" style="gap: 3rem;">
+          <!-- For Workers -->
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+              <span class="badge badge-primary" style="font-size: 1rem; padding: 0.4rem 1rem;">👷 For Workers</span>
+              <h3 style="margin: 0;">Get Daily Work in 3 Steps</h3>
+            </div>
+            
+            <div class="grid" style="gap: 1.25rem;">
+              <div class="feature-step" style="text-align: left; display: flex; gap: 1rem;">
+                <div class="step-number" style="margin: 0; flex-shrink: 0;">1</div>
+                <div>
+                  <h4>Register with Trade & Mobile</h4>
+                  <p style="font-size: 0.9rem; color: var(--slate-600); margin: 0;">No complex paperwork. Tell us your skill, expected wage, and area.</p>
+                </div>
+              </div>
+              <div class="feature-step" style="text-align: left; display: flex; gap: 1rem;">
+                <div class="step-number" style="margin: 0; flex-shrink: 0;">2</div>
+                <div>
+                  <h4>Browse Nearby Daily Jobs</h4>
+                  <p style="font-size: 0.9rem; color: var(--slate-600); margin: 0;">View verified job postings with guaranteed daily wages and site address.</p>
+                </div>
+              </div>
+              <div class="feature-step" style="text-align: left; display: flex; gap: 1rem;">
+                <div class="step-number" style="margin: 0; flex-shrink: 0;">3</div>
+                <div>
+                  <h4>1-Click Apply & Connect Directly</h4>
+                  <p style="font-size: 0.9rem; color: var(--slate-600); margin: 0;">Get hired without agency commissions and receive direct on-time payment.</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+              <a href="worker-register.html" class="btn btn-primary btn-block">Register as a Worker Today</a>
+            </div>
+          </div>
+
+          <!-- For Contractors -->
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+              <span class="badge badge-accent" style="font-size: 1rem; padding: 0.4rem 1rem;">🏗️ For Contractors</span>
+              <h3 style="margin: 0;">Hire Reliable Labor in 3 Steps</h3>
+            </div>
+
+            <div class="grid" style="gap: 1.25rem;">
+              <div class="feature-step" style="text-align: left; display: flex; gap: 1rem;">
+                <div class="step-number" style="margin: 0; flex-shrink: 0; background: var(--accent); color: #1e1b4b;">1</div>
+                <div>
+                  <h4>Post Work Site Requirements</h4>
+                  <p style="font-size: 0.9rem; color: var(--slate-600); margin: 0;">Specify workers required, trade, daily rate, site location, and start date.</p>
+                </div>
+              </div>
+              <div class="feature-step" style="text-align: left; display: flex; gap: 1rem;">
+                <div class="step-number" style="margin: 0; flex-shrink: 0; background: var(--accent); color: #1e1b4b;">2</div>
+                <div>
+                  <h4>Review Verified Applicants</h4>
+                  <p style="font-size: 0.9rem; color: var(--slate-600); margin: 0;">See worker experience, peer ratings, and verify contact details instantly.</p>
+                </div>
+              </div>
+              <div class="feature-step" style="text-align: left; display: flex; gap: 1rem;">
+                <div class="step-number" style="margin: 0; flex-shrink: 0; background: var(--accent); color: #1e1b4b;">3</div>
+                <div>
+                  <h4>Staff Your Site on Time</h4>
+                  <p style="font-size: 0.9rem; color: var(--slate-600); margin: 0;">Confirm workers with one tap and prevent costly construction project delays.</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+              <a href="create-job.html" class="btn btn-accent btn-block">Post a Job Requirement</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action Banner -->
+    <section style="padding: 3.5rem 0; text-align: center; background: linear-gradient(135deg, var(--primary), #1e293b); color: var(--white);">
+      <div class="container">
+        <h2 style="color: var(--white); margin-bottom: 0.75rem;">Empowering India's Building Workforce</h2>
+        <p style="color: #cbd5e1; max-width: 600px; margin: 0 auto 1.5rem;">
+          Join thousands of workers and builders experiencing seamless, direct, and transparent daily-wage hiring.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+          <a href="worker-register.html" class="btn btn-accent btn-lg">Create Worker Account</a>
+          <a href="contractor-register.html" class="btn btn-outline btn-lg" style="color: var(--white); border-color: #94a3b8;">Create Contractor Account</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div>
+          <a href="index.html" class="brand-logo" style="margin-bottom: 0.5rem;">
+            <span class="logo-icon">🔨</span> KaamSetu
+          </a>
+          <p style="font-size: 0.85rem; max-width: 320px; color: var(--slate-600);">
+            Direct labor marketplace empowering Indian daily-wage workers with transparency, dignity, and prompt daily wages.
+          </p>
+        </div>
+
+        <div>
+          <h4 style="margin-bottom: 0.75rem;">Quick Navigation</h4>
+          <ul class="footer-links" style="flex-direction: column; gap: 0.5rem;">
+            <li><a href="worker-dashboard.html">Worker Jobs Feed</a></li>
+            <li><a href="contractor-dashboard.html">Contractor Dashboard</a></li>
+            <li><a href="create-job.html">Post a New Job</a></li>
+            <li><a href="login.html">Login Portal</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="margin-bottom: 0.75rem;">Profiles & Demo</h4>
+          <ul class="footer-links" style="flex-direction: column; gap: 0.5rem;">
+            <li><a href="worker-profile.html">Sample Worker Profile</a></li>
+            <li><a href="contractor-profile.html">Sample Contractor Profile</a></li>
+            <li><a href="job-details.html">Sample Job Details View</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>KaamSetu &bull; Built for Hackathon MVP Demonstration &bull; Frontend UI by Member 1</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

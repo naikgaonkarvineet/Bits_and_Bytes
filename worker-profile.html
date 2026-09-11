@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worker Profile - Ramesh Kumar - KaamSetu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-icon">🔨</span>
+        KaamSetu
+      </a>
+
+      <button class="hamburger" id="hamburgerBtn" aria-label="Toggle navigation">☰</button>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="worker-dashboard.html" class="nav-link">Find Jobs</a></li>
+        <li><a href="contractor-dashboard.html" class="nav-link">Contractor Portal</a></li>
+        <li><a href="worker-profile.html" class="nav-link active">My Profile</a></li>
+        <li class="mobile-nav-actions">
+          <a href="worker-dashboard.html" class="btn btn-primary btn-sm">Browse Jobs</a>
+        </li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="worker-dashboard.html" class="btn btn-outline btn-sm">&larr; Worker Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      
+      <!-- Worker Profile Header Card -->
+      <div class="card" style="margin-bottom: 2rem; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+          
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-light), #bfdbfe); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; border: 3px solid var(--white); box-shadow: var(--shadow-md);">
+              👷
+            </div>
+
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                <h1 style="font-size: 2rem; margin: 0;">Ramesh Kumar</h1>
+                <span class="badge badge-success">✓ Aadhaar Verified</span>
+                <span class="badge badge-primary">Master Craftsman</span>
+              </div>
+              <p style="color: var(--slate-600); margin: 0 0 0.5rem; font-size: 1rem;">
+                🧱 <strong>Senior Mason (राजमिस्त्री)</strong> &bull; 📍 Noida & Greater Noida, Uttar Pradesh
+              </p>
+              <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem;">
+                <span style="color: #b45309; font-weight: 700;">⭐ 4.8 / 5.0 (38 Contractor Reviews)</span>
+                <span style="color: var(--slate-400);">&bull;</span>
+                <span style="color: var(--slate-600);">Preferred Language: <strong>Hindi, Bhojpuri</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: right; min-width: 200px;">
+            <span style="font-size: 0.85rem; color: var(--slate-600); text-transform: uppercase; font-weight: 600;">Daily Expected Wage</span>
+            <div class="wage-tag" style="font-size: 2rem; justify-content: flex-end; margin: 0.25rem 0;">
+              ₹850
+            </div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
+              <a href="tel:+919876012345" class="btn btn-success btn-sm">📞 Direct Call</a>
+              <button class="btn btn-outline btn-sm" onclick="showToast('Ramesh has been saved to your site contacts!', 'success')">💾 Save</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3" style="gap: 2rem;">
+        
+        <!-- Left 2 Cols: Experience, Skills, Reviews -->
+        <div style="grid-column: span 2;">
+          
+          <!-- Skills Card -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Skills & Trade Competencies</h3>
+            <div class="chip-grid">
+              <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">🧱 Brick Masonry (ईंट का काम)</span>
+              <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">🏢 Cement Plastering (प्लास्टर)</span>
+              <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">📐 Foundation Alignment</span>
+              <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Tiles Setting Basics</span>
+              <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">RCC Slab Casting</span>
+              <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Scaffolding Setup</span>
+            </div>
+          </div>
+
+          <!-- Professional Work Background -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Work Experience & Track Record</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; text-align: center;">
+              <div style="background: var(--slate-100); padding: 1rem; border-radius: var(--radius-md);">
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">8+ Years</div>
+                <div style="font-size: 0.8rem; color: var(--slate-600);">Construction Experience</div>
+              </div>
+              <div style="background: var(--slate-100); padding: 1rem; border-radius: var(--radius-md);">
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--success);">42 Jobs</div>
+                <div style="font-size: 0.8rem; color: var(--slate-600);">Completed on KaamSetu</div>
+              </div>
+              <div style="background: var(--slate-100); padding: 1rem; border-radius: var(--radius-md);">
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-hover);">100%</div>
+                <div style="font-size: 0.8rem; color: var(--slate-600);">On-Time Attendance</div>
+              </div>
+            </div>
+
+            <p style="color: var(--slate-700); line-height: 1.7; font-size: 0.95rem;">
+              Experienced senior mason specializing in commercial boundary walls, residential brickwork, and smooth finishing plaster. Familiar with safety helmet/boot protocols and works efficiently both independently and leading helper labor.
+            </p>
+          </div>
+
+          <!-- Contractor Reviews -->
+          <div class="card">
+            <h3 style="margin-bottom: 1.25rem; font-size: 1.25rem;">Verified Contractor Reviews</h3>
+
+            <div style="border-bottom: 1px solid var(--slate-200); padding-bottom: 1rem; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <strong>Vikram Sharma (Apex Infrastructure Ltd.)</strong>
+                <span style="color: #b45309; font-weight: 600;">⭐ 5.0</span>
+              </div>
+              <p style="color: var(--slate-600); font-size: 0.9rem; margin-bottom: 0.25rem;">
+                "Ramesh was the head mason for our Sector 62 commercial boundary wall project. Excellent line and plumb alignment, very fast worker, and cooperative attitude. Highly recommended."
+              </p>
+              <span style="font-size: 0.75rem; color: var(--slate-400);">Completed 4 days of work &bull; Noida</span>
+            </div>
+
+            <div style="border-bottom: 1px solid var(--slate-200); padding-bottom: 1rem; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <strong>Sunil Mehta (Mehta Realtech Developers)</strong>
+                <span style="color: #b45309; font-weight: 600;">⭐ 5.0</span>
+              </div>
+              <p style="color: var(--slate-600); font-size: 0.9rem; margin-bottom: 0.25rem;">
+                "Great plastering work on our basement retaining wall. Came on time every single day at 8:00 AM sharp."
+              </p>
+              <span style="font-size: 0.75rem; color: var(--slate-400);">Completed 6 days of work &bull; Greater Noida</span>
+            </div>
+
+            <div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <strong>Creative Living Interiors</strong>
+                <span style="color: #b45309; font-weight: 600;">⭐ 4.5</span>
+              </div>
+              <p style="color: var(--slate-600); font-size: 0.9rem; margin-bottom: 0.25rem;">
+                "Skillful tile removal and brick partition work. Clean job site management."
+              </p>
+              <span style="font-size: 0.75rem; color: var(--slate-400);">Completed 2 days of work &bull; Indirapuram</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right 1 Col: Verification & Contact Card -->
+        <div>
+          <div style="position: sticky; top: 90px;">
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+              <h4 style="margin-bottom: 1rem;">Identity & Verification</h4>
+              
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span>Govt. Aadhaar Card:</span>
+                  <span class="badge badge-success">✓ Verified</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span>Mobile OTP Authentication:</span>
+                  <span class="badge badge-success">✓ Verified</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span>Direct UPI Account:</span>
+                  <span class="badge badge-success">✓ Active</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span>Skill Competency Check:</span>
+                  <span class="badge badge-primary">Level 4 Artisan</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="background: var(--primary-light); border-color: #bfdbfe;">
+              <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Ready to Hire Ramesh?</h4>
+              <p style="font-size: 0.85rem; color: var(--slate-700); margin-bottom: 1rem;">
+                Directly connect with Ramesh for ongoing site requirements in Noida / NCR. No middleman charges.
+              </p>
+              <a href="tel:+919876012345" class="btn btn-primary btn-block">
+                📞 Call +91 98760 12345
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <div class="footer-bottom">
+        <p>KaamSetu &bull; Built for Hackathon MVP Demonstration &bull; Frontend UI by Member 1</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
