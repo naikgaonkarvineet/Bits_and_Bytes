@@ -1,0 +1,23 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor & IDE artifacts
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
