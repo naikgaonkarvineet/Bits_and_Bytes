@@ -264,9 +264,10 @@ async function runIntegrationTests() {
     console.log('\n======================================================');
     console.log('🎉 ALL INTEGRATION TESTS PASSED SUCCESSFULLY! (11/11)');
     console.log('======================================================\n');
+    process.exit(0);
   } catch (err) {
     console.error('\n❌ INTEGRATION TEST FAILED:', err.message);
-    process.exitCode = 1;
+    process.exit(1);
   } finally {
     if (server) {
       server.close();
